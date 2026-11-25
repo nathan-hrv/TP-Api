@@ -1,0 +1,291 @@
+openapi: 3.0.3
+info:
+  title: API Todo
+  version: 1.0.0
+  description: |
+    API REST de gestion des tâches de maintenance de l'équipe d'exploitation (projet ESGI, à partir du TP 3).
+
+    **Authentification** : `POST /api/v1/auth/login` renvoie un jeton JWT (RS256, durée de vie courte) à envoyer
+    dans l'en-tête `Authorization: Bearer <jeton>`. Dans Swagger UI : bouton **Authorize**, puis coller le jeton
+    seul (sans le mot « Bearer »).
+
+    **Rôles** : deux comptes de démonstration, `user` (rôle user) et `admin` (rôle admin).
+    Toutes les routes todos exigent un jeton valide ; **seul le rôle admin peut supprimer** une tâche.
+
+    **Erreurs** : toutes les erreurs sont des objets JSON avec un champ `message`. Les erreurs de validation (422)
+    ajoutent un objet `errors` qui associe chaque champ (ou `body` pour le corps entier) à une liste de messages.
+    Aucune trace technique n'est jamais renvoyée.
+servers:
+  - url: http://localhost:8081
+    description: Développement (docker compose)
+  - url: http://localhost:8080
+    description: Image de production lancée avec docker run
+tags:
+  - name: Exploitation
+    description: Supervision du service
+  - name: Authentification
+    description: Obtention et lecture du jeton
+  - name: Todos
+    description: Gestion des tâches (jeton obligatoire)
+
+paths:
+  /api/v1/health:
+    get:
+      tags: [Exploitation]
+      summary: Indique si le service répond (route publique, sans jeton).
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: Service opérationnel.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties: { status: { type: string, example: ok } }
+
+  /api/v1/auth/login:
+    post:
+      tags: [Authentification]
+      summary: Échange un identifiant et un mot de passe contre un jeton JWT (route publique).
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Identifiants valides ; jeton émis.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '401':
+          description: Identifiants invalides (même message que le compte existe ou non, pour ne pas révéler les comptes).
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' }, example: { message: Invalid credentials. } } }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /api/v1/me:
+    get:
+      tags: [Authentification]
+      summary: Renvoie l'identité et les rôles lus dans le jeton envoyé.
+      operationId: me
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Identité et rôles contenus dans le jeton.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [username, roles]
+                    properties:
+                      username: { type: string, example: admin }
+                      roles: { type: array, items: { type: string }, example: [admin] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/todos:
+    get:
+      tags: [Todos]
+      summary: Liste les tâches, triées par identifiant, éventuellement filtrées par état.
+      operationId: listTodos
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: done
+          in: query
+          required: false
+          description: |
+            Filtre facultatif sur l'état des tâches. Valeurs acceptées, en minuscules uniquement :
+            `true` (tâches terminées) ou `false` (tâches à faire). Absent : toutes les tâches.
+            Toute autre valeur (`maybe`, `1`, `TRUE`...) est refusée avec 422. Le filtre ne change pas l'ordre.
+          schema: { type: string, enum: ['true', 'false'] }
+          example: 'true'
+      responses:
+        '200':
+          description: Les tâches (éventuellement filtrées), dans l'ordre croissant de leur identifiant.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TodoList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: Valeur du paramètre `done` autre que `true` ou `false`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+              example: { message: The given data was invalid., errors: { done: [Must be 'true' or 'false'.] } }
+    post:
+      tags: [Todos]
+      summary: Crée une tâche (toujours non terminée) ; l'identifiant est attribué par le serveur.
+      operationId: createTodo
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TodoInput' }
+      responses:
+        '201':
+          description: Tâche créée ; son URL est dans l'en-tête Location.
+          headers:
+            Location: { description: 'URL de la tâche créée, par exemple /api/v1/todos/1.', schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TodoEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: Titre absent, vide ou de plus de 100 caractères, ou corps qui n'est pas un objet JSON.
+          content: { application/json: { schema: { $ref: '#/components/schemas/ValidationError' } } }
+
+  /api/v1/todos/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identifiant entier de la tâche.
+        schema: { type: integer, minimum: 1 }
+    get:
+      tags: [Todos]
+      summary: Lit une tâche par son identifiant.
+      operationId: getTodo
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: La tâche demandée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TodoEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Todos]
+      summary: Modifie partiellement une tâche (titre, état, ou les deux).
+      description: |
+        Le corps contient `title`, `done`, ou les deux ; au moins l'un des deux est obligatoire.
+        `title` suit les règles de la création ; `done` doit être un booléen JSON (`true`/`false`, pas `"true"`).
+        Les autres champs (`id`, `created_at`...) sont ignorés. Le même PATCH envoyé deux fois donne le même résultat.
+      operationId: patchTodo
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TodoPatch' }
+            examples:
+              terminer: { summary: Marquer terminée, value: { done: true } }
+              les-deux: { summary: Titre et état, value: { title: Renouveler le certificat du proxy, done: false } }
+      responses:
+        '200':
+          description: Tâche modifiée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TodoEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: Corps vide (`{}`), titre invalide, `done` non booléen, ou corps qui n'est pas un objet JSON.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+              example: { message: The given data was invalid., errors: { body: [At least one of 'title' or 'done' is required.] } }
+    delete:
+      tags: [Todos]
+      summary: Supprime une tâche (rôle admin uniquement).
+      description: |
+        Idempotent quant à l'état du serveur : après la première suppression, la tâche n'existe plus.
+        Une deuxième suppression renvoie 404 : la réponse diffère, l'état final est identique.
+      operationId: deleteTodo
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Tâche supprimée ; la réponse n'a pas de corps. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Jeton obtenu par POST /api/v1/auth/login.
+
+  responses:
+    Unauthorized:
+      description: Jeton absent, invalide, falsifié ou expiré. L'en-tête WWW-Authenticate vaut Bearer.
+      headers:
+        WWW-Authenticate: { schema: { type: string, example: Bearer } }
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' }, example: { message: Unauthenticated. } } }
+    Forbidden:
+      description: Jeton valide mais rôle insuffisant (la suppression est réservée au rôle admin).
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' }, example: { message: This action is unauthorized. } } }
+    NotFound:
+      description: Aucune tâche ne porte cet identifiant.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' }, example: { message: Todo not found. } } }
+    ValidationFailed:
+      description: Données invalides ; le détail est donné champ par champ dans errors.
+      content: { application/json: { schema: { $ref: '#/components/schemas/ValidationError' } } }
+
+  schemas:
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string, example: Todo not found. }
+    ValidationError:
+      type: object
+      required: [message, errors]
+      properties:
+        message: { type: string, example: The given data was invalid. }
+        errors:
+          type: object
+          additionalProperties: { type: array, items: { type: string } }
+          example: { title: [Title must not be blank.] }
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 1, maxLength: 50, example: admin }
+        password: { type: string, format: password, minLength: 1, maxLength: 255 }
+    TokenResponse:
+      type: object
+      required: [token, token_type, expires_at]
+      properties:
+        token: { type: string, description: JWT signé en RS256. }
+        token_type: { type: string, example: Bearer }
+        expires_at: { type: string, format: date-time }
+    TodoInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 100, description: Non vide (les espaces seuls sont refusés)., example: Sauvegarder la base }
+    TodoPatch:
+      type: object
+      minProperties: 1
+      description: Au moins l'un des deux champs ; tout autre champ est ignoré.
+      properties:
+        title: { type: string, minLength: 1, maxLength: 100, example: Renouveler le certificat du proxy }
+        done: { type: boolean, example: true }
+    Todo:
+      type: object
+      required: [id, title, done, created_at]
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, example: Sauvegarder la base }
+        done: { type: boolean, example: false }
+        created_at: { type: string, format: date-time, example: '2026-11-02T08:12:44Z' }
+    TodoEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/Todo' }
+    TodoList:
+      type: object
+      required: [data]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Todo' } }

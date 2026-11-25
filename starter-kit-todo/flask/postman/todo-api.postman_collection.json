@@ -1,0 +1,1217 @@
+{
+  "info": {
+    "name": "Todo API (projet v1.0.0)",
+    "description": "Collection du projet. Importer la collection et un environnement (todo-local pour docker compose, port 8081 ; todo-image pour l'image de production, port 8080), renseigner admin_password et user_password en VALEUR COURANTE (jamais en valeur initiale), puis exécuter toute la collection avec le Runner ou Newman.\n\nnewman run postman/todo-api.postman_collection.json -e postman/todo-local.postman_environment.json --env-var admin_password=... --env-var user_password=...",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "user_token",
+      "value": ""
+    },
+    {
+      "key": "todo_id",
+      "value": ""
+    },
+    {
+      "key": "todo_title",
+      "value": ""
+    },
+    {
+      "key": "error_todo_id",
+      "value": ""
+    },
+    {
+      "key": "long_title",
+      "value": ""
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Tests communs à TOUTES les requêtes",
+          "pm.test('répond en moins de 2 s', () => pm.expect(pm.response.responseTime).to.be.below(2000));",
+          "if (pm.response.code !== 204) {",
+          "  pm.test('Content-Type JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+          "  pm.test('aucune trace technique', () => pm.expect(pm.response.text()).to.not.include('Traceback'));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentification",
+      "description": "Route publique, puis login des deux comptes : les jetons sont rangés dans les variables de collection admin_token et user_token.",
+      "item": [
+        {
+          "name": "Santé (publique, sans jeton)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test('service opérationnel', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/health",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Login admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"JSON Schema : réponse de login\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['token', 'token_type', 'expires_at'], properties: { token: { type: 'string', minLength: 20 }, token_type: { const: 'Bearer' }, expires_at: { type: 'string' } } }));",
+                  "pm.collectionVariables.set('admin_token', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"username\": \"{{admin_username}}\", \"password\": \"{{admin_password}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"JSON Schema : réponse de login\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['token', 'token_type', 'expires_at'], properties: { token: { type: 'string', minLength: 20 }, token_type: { const: 'Bearer' }, expires_at: { type: 'string' } } }));",
+                  "pm.collectionVariables.set('user_token', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"username\": \"{{user_username}}\", \"password\": \"{{user_password}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Qui suis-je ? (jeton user)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test('identité et rôle lus dans le jeton', () => {",
+                  "  const me = pm.response.json().data;",
+                  "  pm.expect(me.username).to.eql(pm.environment.get('user_username'));",
+                  "  pm.expect(me.roles).to.eql(['user']);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Scénario rejouable",
+      "description": "Créer, lire, modifier, filtrer, supprimer (admin), relire en 404. Le scénario crée et supprime ses propres données : il se rejoue sans fin.",
+      "item": [
+        {
+          "name": "Créer une tâche",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"JSON Schema : tâche créée\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['data'], properties: { data: { type: 'object', required: ['id', 'title', 'done', 'created_at'], properties: { id: { type: 'integer', minimum: 1 }, title: { type: 'string', minLength: 1, maxLength: 100 }, done: { type: 'boolean' }, created_at: { type: 'string', pattern: '^\\\\d{4}-\\\\d{2}-\\\\d{2}T\\\\d{2}:\\\\d{2}:\\\\d{2}Z$' } } } } }));",
+                  "const todo = pm.response.json().data;",
+                  "pm.test('en-tête Location vers la tâche créée', () => pm.expect(pm.response.headers.get('Location')).to.match(new RegExp('/api/v1/todos/' + todo.id + '$')));",
+                  "pm.test('une tâche naît non terminée', () => pm.expect(todo.done).to.eql(false));",
+                  "pm.collectionVariables.set('todo_id', todo.id);",
+                  "pm.collectionVariables.set('todo_title', todo.title);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"title\": \"Vérifier les sauvegardes {{$timestamp}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Lire la tâche",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"JSON Schema : tâche\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['data'], properties: { data: { type: 'object', required: ['id', 'title', 'done', 'created_at'], properties: { id: { type: 'integer', minimum: 1 }, title: { type: 'string', minLength: 1, maxLength: 100 }, done: { type: 'boolean' }, created_at: { type: 'string', pattern: '^\\\\d{4}-\\\\d{2}-\\\\d{2}T\\\\d{2}:\\\\d{2}:\\\\d{2}Z$' } } } } }));",
+                  "pm.test('c\\'est bien la tâche créée', () => pm.expect(pm.response.json().data.id).to.eql(Number(pm.collectionVariables.get('todo_id'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Modifier : marquer terminée (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"JSON Schema : tâche modifiée\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['data'], properties: { data: { type: 'object', required: ['id', 'title', 'done', 'created_at'], properties: { id: { type: 'integer', minimum: 1 }, title: { type: 'string', minLength: 1, maxLength: 100 }, done: { type: 'boolean' }, created_at: { type: 'string', pattern: '^\\\\d{4}-\\\\d{2}-\\\\d{2}T\\\\d{2}:\\\\d{2}:\\\\d{2}Z$' } } } } }));",
+                  "const todo = pm.response.json().data;",
+                  "pm.test('done passe à true', () => pm.expect(todo.done).to.eql(true));",
+                  "pm.test('le titre, non envoyé, est inchangé', () => pm.expect(todo.title).to.eql(pm.collectionVariables.get('todo_title')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"done\": true }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modifier à nouveau : même résultat (idempotence)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test('même état après un second PATCH identique', () => pm.expect(pm.response.json().data.done).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"done\": true }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Filtrer : terminées (?done=true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"JSON Schema : liste de tâches\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['data'], properties: { data: { type: 'array', items: { type: 'object', required: ['id', 'title', 'done', 'created_at'], properties: { id: { type: 'integer' }, title: { type: 'string' }, done: { type: 'boolean' }, created_at: { type: 'string' } } } } } }));",
+                  "const items = pm.response.json().data;",
+                  "pm.test('uniquement des tâches terminées', () => items.forEach(t => pm.expect(t.done).to.eql(true)));",
+                  "pm.test('contient la tâche modifiée', () => pm.expect(items.map(t => t.id)).to.include(Number(pm.collectionVariables.get('todo_id'))));",
+                  "pm.test('triée par identifiant', () => { const ids = items.map(t => t.id); pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos?done=true",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrer : à faire (?done=false)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"JSON Schema : liste de tâches\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['data'], properties: { data: { type: 'array', items: { type: 'object', required: ['id', 'title', 'done', 'created_at'], properties: { id: { type: 'integer' }, title: { type: 'string' }, done: { type: 'boolean' }, created_at: { type: 'string' } } } } } }));",
+                  "const items = pm.response.json().data;",
+                  "pm.test('uniquement des tâches à faire', () => items.forEach(t => pm.expect(t.done).to.eql(false)));",
+                  "pm.test('ne contient pas la tâche terminée', () => pm.expect(items.map(t => t.id)).to.not.include(Number(pm.collectionVariables.get('todo_id'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos?done=false",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lister toutes les tâches",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 200\", () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().data.map(t => t.id);",
+                  "pm.test('contient la tâche', () => pm.expect(ids).to.include(Number(pm.collectionVariables.get('todo_id'))));",
+                  "pm.test('triée par identifiant', () => pm.expect(ids).to.eql([...ids].sort((a, b) => a - b)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Supprimer (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test('aucun corps', () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Relire la tâche supprimée (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"JSON Schema : format d'erreur uniforme\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message'], additionalProperties: false, properties: { message: { type: 'string', minLength: 1 } } }));",
+                  "pm.test('message Todo not found.', () => pm.expect(pm.response.json().message).to.eql('Todo not found.'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Supprimer une seconde fois (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 404 : la réponse diffère, l'état final est le même\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Cas d'erreur",
+      "description": "401, 403, 404, 422. La tâche créée ici pour les tests 403 et 422 est supprimée à la fin du dossier.",
+      "item": [
+        {
+          "name": "Lister sans jeton (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 401 : jeton absent ou invalide\", () => pm.response.to.have.status(401));",
+                  "pm.test('en-tête WWW-Authenticate: Bearer', () => pm.expect(pm.response.headers.get('WWW-Authenticate')).to.eql('Bearer'));",
+                  "pm.test('message Unauthenticated.', () => pm.expect(pm.response.json().message).to.eql('Unauthenticated.'));",
+                  "pm.test(\"JSON Schema : format d'erreur uniforme\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message'], additionalProperties: false, properties: { message: { type: 'string', minLength: 1 } } }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Créer sans jeton (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 401 : jeton absent ou invalide\", () => pm.response.to.have.status(401));",
+                  "pm.test('en-tête WWW-Authenticate: Bearer', () => pm.expect(pm.response.headers.get('WWW-Authenticate')).to.eql('Bearer'));",
+                  "pm.test('message Unauthenticated.', () => pm.expect(pm.response.json().message).to.eql('Unauthenticated.'));",
+                  "pm.test(\"JSON Schema : format d'erreur uniforme\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message'], additionalProperties: false, properties: { message: { type: 'string', minLength: 1 } } }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"title\": \"Sans jeton\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Lister avec un jeton invalide (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 401 : jeton absent ou invalide\", () => pm.response.to.have.status(401));",
+                  "pm.test('en-tête WWW-Authenticate: Bearer', () => pm.expect(pm.response.headers.get('WWW-Authenticate')).to.eql('Bearer'));",
+                  "pm.test('message Unauthenticated.', () => pm.expect(pm.response.json().message).to.eql('Unauthenticated.'));",
+                  "pm.test(\"JSON Schema : format d'erreur uniforme\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message'], additionalProperties: false, properties: { message: { type: 'string', minLength: 1 } } }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "jeton.invalide.falsifie",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Préparer une tâche pour les erreurs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('error_todo_id', pm.response.json().data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"title\": \"Tâche pour les cas d'erreur {{$timestamp}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Supprimer avec le rôle user (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"JSON Schema : format d'erreur uniforme\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message'], additionalProperties: false, properties: { message: { type: 'string', minLength: 1 } } }));",
+                  "pm.test('message This action is unauthorized.', () => pm.expect(pm.response.json().message).to.eql('This action is unauthorized.'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{error_todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lire une tâche inconnue (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"JSON Schema : format d'erreur uniforme\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message'], additionalProperties: false, properties: { message: { type: 'string', minLength: 1 } } }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/999999999",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Modifier une tâche inconnue (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"JSON Schema : format d'erreur uniforme\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message'], additionalProperties: false, properties: { message: { type: 'string', minLength: 1 } } }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/999999999",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"done\": true }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Supprimer une tâche inconnue (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"JSON Schema : format d'erreur uniforme\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message'], additionalProperties: false, properties: { message: { type: 'string', minLength: 1 } } }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/999999999",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer avec un titre vide (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"JSON Schema : erreur de validation\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message', 'errors'], properties: { message: { type: 'string' }, errors: { type: 'object', minProperties: 1, additionalProperties: { type: 'array', items: { type: 'string' } } } } }));",
+                  "pm.test('erreur sur le champ title', () => pm.expect(pm.response.json().errors).to.have.property('title'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"title\": \"   \" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Créer avec un titre trop long (422)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 101 caractères : un de plus que la limite du contrat",
+                  "pm.collectionVariables.set('long_title', 'x'.repeat(101));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"JSON Schema : erreur de validation\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message', 'errors'], properties: { message: { type: 'string' }, errors: { type: 'object', minProperties: 1, additionalProperties: { type: 'array', items: { type: 'string' } } } } }));",
+                  "pm.test('erreur sur le champ title', () => pm.expect(pm.response.json().errors).to.have.property('title'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"title\": \"{{long_title}}\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modifier avec un corps vide (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"JSON Schema : erreur de validation\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message', 'errors'], properties: { message: { type: 'string' }, errors: { type: 'object', minProperties: 1, additionalProperties: { type: 'array', items: { type: 'string' } } } } }));",
+                  "pm.test('erreur sur le champ body', () => pm.expect(pm.response.json().errors).to.have.property('body'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{error_todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modifier avec done non booléen (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"JSON Schema : erreur de validation\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message', 'errors'], properties: { message: { type: 'string' }, errors: { type: 'object', minProperties: 1, additionalProperties: { type: 'array', items: { type: 'string' } } } } }));",
+                  "pm.test('erreur sur le champ done', () => pm.expect(pm.response.json().errors).to.have.property('done'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{error_todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"done\": \"true\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Filtrer avec une valeur invalide (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"JSON Schema : erreur de validation\", () => pm.response.to.have.jsonSchema({ type: 'object', required: ['message', 'errors'], properties: { message: { type: 'string' }, errors: { type: 'object', minProperties: 1, additionalProperties: { type: 'array', items: { type: 'string' } } } } }));",
+                  "pm.test('erreur sur le champ done', () => pm.expect(pm.response.json().errors).to.have.property('done'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos?done=maybe",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Nettoyage : supprimer la tâche des erreurs (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"statut 204\", () => pm.response.to.have.status(204));",
+                  "// Fin de la collection : on efface les jetons et identifiants pour qu'un export ne contienne aucun secret",
+                  "['admin_token', 'user_token', 'todo_id', 'todo_title', 'error_todo_id', 'long_title'].forEach(k => pm.collectionVariables.unset(k));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/todos/{{error_todo_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

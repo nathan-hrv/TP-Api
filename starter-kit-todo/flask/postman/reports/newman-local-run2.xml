@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Todo API (projet v1.0.0)" tests="28" time="0.128">
+  <testsuite name="1. Authentification / Santé (publique, sans jeton)" id="1ac66635-1447-4a0e-855a-2291dab7108c" timestamp="2026-11-25T17:03:36.287Z" tests="5" failures="0" errors="0" time="0.014">
+    <testcase name="répond en moins de 2 s" time="0.014" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.014" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.014" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.014" classname="TodoApiProjetV100"/>
+    <testcase name="service opérationnel" time="0.014" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="1. Authentification / Login admin" id="fb2817e5-b983-465c-949f-8070d88409f1" timestamp="2026-11-25T17:03:36.287Z" tests="5" failures="0" errors="0" time="0.028">
+    <testcase name="répond en moins de 2 s" time="0.028" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.028" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.028" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.028" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : réponse de login" time="0.028" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="1. Authentification / Login user" id="f95e0b81-4d13-45c3-8ab1-f0aeb3b074ce" timestamp="2026-11-25T17:03:36.287Z" tests="5" failures="0" errors="0" time="0.028">
+    <testcase name="répond en moins de 2 s" time="0.028" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.028" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.028" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.028" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : réponse de login" time="0.028" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="1. Authentification / Qui suis-je ? (jeton user)" id="eb573fa5-fcbe-4a54-a519-2d3521525b37" timestamp="2026-11-25T17:03:36.287Z" tests="5" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="identité et rôle lus dans le jeton" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Créer une tâche" id="c17f1601-4262-4a49-b72c-abd0da7824f1" timestamp="2026-11-25T17:03:36.287Z" tests="7" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 201" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : tâche créée" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="en-tête Location vers la tâche créée" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="une tâche naît non terminée" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Lire la tâche" id="600a94ee-d5f7-43a8-b67c-8b1037cdf217" timestamp="2026-11-25T17:03:36.287Z" tests="6" failures="0" errors="0" time="0.003">
+    <testcase name="répond en moins de 2 s" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : tâche" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="c'est bien la tâche créée" time="0.003" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Modifier : marquer terminée (PATCH)" id="9dda4e94-16e7-4813-acf9-b93a6b04cbfe" timestamp="2026-11-25T17:03:36.287Z" tests="7" failures="0" errors="0" time="0.003">
+    <testcase name="répond en moins de 2 s" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : tâche modifiée" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="done passe à true" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="le titre, non envoyé, est inchangé" time="0.003" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Modifier à nouveau : même résultat (idempotence)" id="bfc14c86-391e-46ae-8847-b28023aa1549" timestamp="2026-11-25T17:03:36.287Z" tests="5" failures="0" errors="0" time="0.003">
+    <testcase name="répond en moins de 2 s" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="même état après un second PATCH identique" time="0.003" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Filtrer : terminées (?done=true)" id="74e9be24-6efe-4567-ba92-8bc6ab93b470" timestamp="2026-11-25T17:03:36.287Z" tests="8" failures="0" errors="0" time="0.003">
+    <testcase name="répond en moins de 2 s" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : liste de tâches" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="uniquement des tâches terminées" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="contient la tâche modifiée" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="triée par identifiant" time="0.003" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Filtrer : à faire (?done=false)" id="52e143c5-bfce-41da-81c8-c41cf58b5e52" timestamp="2026-11-25T17:03:36.287Z" tests="7" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : liste de tâches" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="uniquement des tâches à faire" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="ne contient pas la tâche terminée" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Lister toutes les tâches" id="617c1e6f-dbef-4ef1-8292-b96f5a088ed2" timestamp="2026-11-25T17:03:36.287Z" tests="6" failures="0" errors="0" time="0.003">
+    <testcase name="répond en moins de 2 s" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="statut 200" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="contient la tâche" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="triée par identifiant" time="0.003" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Supprimer (admin)" id="97be7192-7c06-46a8-8676-66d1f26767b1" timestamp="2026-11-25T17:03:36.287Z" tests="3" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 204" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucun corps" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Relire la tâche supprimée (404)" id="bd41149f-ed3c-4dca-96ff-dc63bd51068a" timestamp="2026-11-25T17:03:36.287Z" tests="6" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 404" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : format d'erreur uniforme" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="message Todo not found." time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="2. Scénario rejouable / Supprimer une seconde fois (404)" id="05a7d17f-fe48-4cc7-9705-e907858fd0bb" timestamp="2026-11-25T17:03:36.287Z" tests="4" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 404 : la réponse diffère, l'état final est le même" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Lister sans jeton (401)" id="6573091e-cc96-4947-a6d5-ae5b90c9cbed" timestamp="2026-11-25T17:03:36.287Z" tests="7" failures="0" errors="0" time="0.001">
+    <testcase name="répond en moins de 2 s" time="0.001" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.001" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.001" classname="TodoApiProjetV100"/>
+    <testcase name="statut 401 : jeton absent ou invalide" time="0.001" classname="TodoApiProjetV100"/>
+    <testcase name="en-tête WWW-Authenticate: Bearer" time="0.001" classname="TodoApiProjetV100"/>
+    <testcase name="message Unauthenticated." time="0.001" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : format d'erreur uniforme" time="0.001" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Créer sans jeton (401)" id="6d644a50-9bcf-4f52-8c87-17247f0dbff0" timestamp="2026-11-25T17:03:36.287Z" tests="7" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 401 : jeton absent ou invalide" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="en-tête WWW-Authenticate: Bearer" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="message Unauthenticated." time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : format d'erreur uniforme" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Lister avec un jeton invalide (401)" id="e6fda415-a8ad-4445-ae08-e83da7df4b1d" timestamp="2026-11-25T17:03:36.287Z" tests="7" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 401 : jeton absent ou invalide" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="en-tête WWW-Authenticate: Bearer" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="message Unauthenticated." time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : format d'erreur uniforme" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Préparer une tâche pour les erreurs" id="043d615f-0040-49c2-9065-e45c802adae9" timestamp="2026-11-25T17:03:36.287Z" tests="4" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 201" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Supprimer avec le rôle user (403)" id="d89542f6-72ac-4be9-9aae-91bf37eff8f0" timestamp="2026-11-25T17:03:36.287Z" tests="6" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 403" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : format d'erreur uniforme" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="message This action is unauthorized." time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Lire une tâche inconnue (404)" id="0e8d0587-bdf0-4d21-8f15-7a3913aa3bef" timestamp="2026-11-25T17:03:36.287Z" tests="5" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 404" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : format d'erreur uniforme" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Modifier une tâche inconnue (404)" id="9a6751a4-ba49-4324-86cb-d39e545a87e7" timestamp="2026-11-25T17:03:36.287Z" tests="5" failures="0" errors="0" time="0.003">
+    <testcase name="répond en moins de 2 s" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="statut 404" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : format d'erreur uniforme" time="0.003" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Supprimer une tâche inconnue (404)" id="6ecd65ba-f798-454b-93f4-d1f5dd805e24" timestamp="2026-11-25T17:03:36.287Z" tests="5" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 404" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : format d'erreur uniforme" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Créer avec un titre vide (422)" id="02a87927-4c6d-4808-a0df-3e2a6aaa0b43" timestamp="2026-11-25T17:03:36.287Z" tests="6" failures="0" errors="0" time="0.003">
+    <testcase name="répond en moins de 2 s" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="statut 422" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : erreur de validation" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="erreur sur le champ title" time="0.003" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Créer avec un titre trop long (422)" id="8e95d3a3-5423-41ae-a51c-ef57f7b65bb8" timestamp="2026-11-25T17:03:36.287Z" tests="6" failures="0" errors="0" time="0.003">
+    <testcase name="répond en moins de 2 s" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="statut 422" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : erreur de validation" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="erreur sur le champ title" time="0.003" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Modifier avec un corps vide (422)" id="24667b3b-bb56-45e2-a38d-d505fc059fa2" timestamp="2026-11-25T17:03:36.287Z" tests="6" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 422" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : erreur de validation" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="erreur sur le champ body" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Modifier avec done non booléen (422)" id="5b3ff2df-d4f6-4238-8b9c-7b00a6a8e910" timestamp="2026-11-25T17:03:36.287Z" tests="6" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 422" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : erreur de validation" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="erreur sur le champ done" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Filtrer avec une valeur invalide (422)" id="03c054e5-1909-474f-b7cf-5e0588cac4b3" timestamp="2026-11-25T17:03:36.287Z" tests="6" failures="0" errors="0" time="0.003">
+    <testcase name="répond en moins de 2 s" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="Content-Type JSON" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="aucune trace technique" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="statut 422" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="JSON Schema : erreur de validation" time="0.003" classname="TodoApiProjetV100"/>
+    <testcase name="erreur sur le champ done" time="0.003" classname="TodoApiProjetV100"/>
+  </testsuite>
+  <testsuite name="3. Cas d'erreur / Nettoyage : supprimer la tâche des erreurs (admin)" id="69ec2d12-c0f7-4d59-be97-5ea2637033a0" timestamp="2026-11-25T17:03:36.287Z" tests="2" failures="0" errors="0" time="0.002">
+    <testcase name="répond en moins de 2 s" time="0.002" classname="TodoApiProjetV100"/>
+    <testcase name="statut 204" time="0.002" classname="TodoApiProjetV100"/>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,16 @@
+.git
+.env
+.env.*
+!.env.example
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+*.pem
+tests
+docker-compose*.yml
+# Inutiles à l'exécution : l'image ne contient que app/ et docs/
+postman
+scripts
+*.md
+results.xml
